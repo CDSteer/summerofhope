@@ -1,82 +1,212 @@
+/*
+	Astral by HTML5 UP
+	html5up.net | @ajlkn
+	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+*/
+
 (function($) {
 
-  "use strict";
+	var $window = $(window),
+		$body = $('body'),
+		$wrapper = $('#wrapper'),
+		$main = $('#main'),
+		$panels = $main.children('.panel'),
+		$nav = $('#nav'), $nav_links = $nav.children('a');
 
-  $(window).on('load', function() {
+	// Breakpoints.
+		breakpoints({
+			xlarge:  [ '1281px',  '1680px' ],
+			large:   [ '981px',   '1280px' ],
+			medium:  [ '737px',   '980px'  ],
+			small:   [ '361px',   '736px'  ],
+			xsmall:  [ null,      '360px'  ]
+		});
 
-  /*Page Loader active
-    ========================================================*/
-    $('#preloader').fadeOut();
+	// Play initial animations on page load.
+		$window.on('load', function() {
+			window.setTimeout(function() {
+				$body.removeClass('is-preload');
+			}, 100);
+		});
 
-  // Sticky Nav
-    $(window).on('scroll', function() {
-        if ($(window).scrollTop() > 200) {
-            $('.scrolling-navbar').addClass('top-nav-collapse');
-        } else {
-            $('.scrolling-navbar').removeClass('top-nav-collapse');
-        }
-    });
+	// Nav.
+		$nav_links
+			.on('click', function(event) {
 
-    /* ==========================================================================
-       countdown timer
-       ========================================================================== */
-     jQuery('#clock').countdown('2021/09/16',function(event){
-      var $this=jQuery(this).html(event.strftime(''
-      +'<div class="time-entry days"><span>%-D</span> Days</div> '
-      +'<div class="time-entry hours"><span>%H</span> Hours</div> '
-      +'<div class="time-entry minutes"><span>%M</span> Minutes</div> '
-      +'<div class="time-entry seconds"><span>%S</span> Seconds</div> '));
-    });
+				var href = $(this).attr('href');
 
-    /* slicknav mobile menu active  */
-    $('.mobile-menu').slicknav({
-        prependTo: '.navbar-header',
-        parentTag: 'liner',
-        allowParentLinks: true,
-        duplicate: true,
-        label: '',
-      });
+				// Not a panel link? Bail.
+					if (href.charAt(0) != '#'
+					||	$panels.filter(href).length == 0)
+						return;
 
-      /* WOW Scroll Spy
-    ========================================================*/
-     var wow = new WOW({
-      //disabled for mobile
-        mobile: false
-    });
-    wow.init();
+				// Prevent default.
+					event.preventDefault();
+					event.stopPropagation();
 
-    /* Nivo Lightbox
-    ========================================================*/
-    $('.lightbox').nivoLightbox({
-        effect: 'fadeScale',
-        keyboardNav: true,
-      });
+				// Change panels.
+					if (window.location.hash != href)
+						window.location.hash = href;
 
-    // one page navigation
-    $('.navbar-nav').onePageNav({
-            currentClass: 'active'
-    });
+			});
 
-    /* Back Top Link active
-    ========================================================*/
-      var offset = 200;
-      var duration = 500;
-      $(window).scroll(function() {
-        if ($(this).scrollTop() > offset) {
-          $('.back-to-top').fadeIn(400);
-        } else {
-          $('.back-to-top').fadeOut(400);
-        }
-      });
+	// Panels.
 
-      $('.back-to-top').on('click',function(event) {
-        event.preventDefault();
-        $('html, body').animate({
-          scrollTop: 0
-        }, 600);
-        return false;
-      });
+		// Initialize.
+			(function() {
 
-  });
+				var $panel, $link;
 
-}(jQuery));
+				// Get panel, link.
+					if (window.location.hash) {
+
+				 		$panel = $panels.filter(window.location.hash);
+						$link = $nav_links.filter('[href="' + window.location.hash + '"]');
+
+					}
+
+				// No panel/link? Default to first.
+					if (!$panel
+					||	$panel.length == 0) {
+
+						$panel = $panels.first();
+						$link = $nav_links.first();
+
+					}
+
+				// Deactivate all panels except this one.
+					$panels.not($panel)
+						.addClass('inactive')
+						.hide();
+
+				// Activate link.
+					$link
+						.addClass('active');
+
+				// Reset scroll.
+					$window.scrollTop(0);
+
+			})();
+
+		// Hashchange event.
+			$window.on('hashchange', function(event) {
+
+				var $panel, $link;
+
+				// Get panel, link.
+					if (window.location.hash) {
+
+				 		$panel = $panels.filter(window.location.hash);
+						$link = $nav_links.filter('[href="' + window.location.hash + '"]');
+
+						// No target panel? Bail.
+							if ($panel.length == 0)
+								return;
+
+					}
+
+				// No panel/link? Default to first.
+					else {
+
+						$panel = $panels.first();
+						$link = $nav_links.first();
+
+					}
+
+				// Deactivate all panels.
+					$panels.addClass('inactive');
+
+				// Deactivate all links.
+					$nav_links.removeClass('active');
+
+				// Activate target link.
+					$link.addClass('active');
+
+				// Set max/min height.
+					$main
+						.css('max-height', $main.height() + 'px')
+						.css('min-height', $main.height() + 'px');
+
+				// Delay.
+					setTimeout(function() {
+
+						// Hide all panels.
+							$panels.hide();
+
+						// Show target panel.
+							$panel.show();
+
+						// Set new max/min height.
+							$main
+								.css('max-height', $panel.outerHeight() + 'px')
+								.css('min-height', $panel.outerHeight() + 'px');
+
+						// Reset scroll.
+							$window.scrollTop(0);
+
+						// Delay.
+							window.setTimeout(function() {
+
+								// Activate target panel.
+									$panel.removeClass('inactive');
+
+								// Clear max/min height.
+									$main
+										.css('max-height', '')
+										.css('min-height', '');
+
+								// IE: Refresh.
+									$window.triggerHandler('--refresh');
+
+								// Unlock.
+									locked = false;
+
+							}, (breakpoints.active('small') ? 0 : 500));
+
+					}, 250);
+
+			});
+
+	// IE: Fixes.
+		if (browser.name == 'ie') {
+
+			// Fix min-height/flexbox.
+				$window.on('--refresh', function() {
+
+					$wrapper.css('height', 'auto');
+
+					window.setTimeout(function() {
+
+						var h = $wrapper.height(),
+							wh = $window.height();
+
+						if (h < wh)
+							$wrapper.css('height', '100vh');
+
+					}, 0);
+
+				});
+
+				$window.on('resize load', function() {
+					$window.triggerHandler('--refresh');
+				});
+
+			// Fix intro pic.
+				$('.panel.intro').each(function() {
+
+					var $pic = $(this).children('.pic'),
+						$img = $pic.children('img');
+
+					$pic
+						.css('background-image', 'url(' + $img.attr('src') + ')')
+						.css('background-size', 'cover')
+						.css('background-position', 'center');
+
+					$img
+						.css('visibility', 'hidden');
+
+				});
+
+		}
+
+})(jQuery);
